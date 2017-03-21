@@ -17,4 +17,16 @@
  */
 
 @property (nonatomic, assign) CGFloat value;
+
+/*!
+ @property delegate
+ @abstract 代理
+ */
+@property (nonatomic,assign) id delegate;
+@end
+
+@protocol DCRotatingWheelDelegate <NSObject>
+
+- (void)onDCRotatingWheelDelegateInertanceEventWithValue:(float)value;
+
 @end

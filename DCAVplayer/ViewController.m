@@ -9,7 +9,7 @@
 #import "ViewController.h"
 #import "DCRotatingWheel.h"
 #import <AVFoundation/AVFoundation.h>
-@interface ViewController ()
+@interface ViewController ()<DCRotatingWheelDelegate>
 {
     id _playTimeObserver; // 观察者
     BOOL _play;           // 记录播放状态
@@ -39,6 +39,8 @@
     // 创建慢放滚轮，并绑定其三个状态的方法
     DCRotatingWheel *control = [[DCRotatingWheel alloc]initWithFrame:CGRectMake(40, 340, self.view.frame.size.width-80, 50)];
     
+    control.delegate = self; // 设置惯性代理
+    
     [control addTarget:self action:@selector(onControlTouchDown:) forControlEvents:UIControlEventTouchDown];
     [control addTarget:self action:@selector(onControlTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
     
@@ -47,9 +49,9 @@
     [self.view addSubview:control];
     
     // 视频播放地址是网络提供的，视频短，就一分钟。建议自己加个长点的视频。
-    NSString *urlStr = @"http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
-    
-    
+
+    NSString *urlStr = @"https://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
+//    NSString *urlStr = @"http://zyvideo1.oss-cn-qingdao.aliyuncs.com/zyvd/7c/de/04ec95f4fd42d9d01f63b9683ad0";
 //    NSString *filePath = [[NSBundle mainBundle]pathForResource:@"xiujian2" ofType:@"mp4"];
    
 //    NSURL *url = [NSURL fileURLWithPath:filePath];
@@ -270,21 +272,48 @@
     [self setPlayBtnImage];
     
     float currentTime = self.mp4Slider.value+(col.value*0.1 );// 滚轮的拨动距离乘以系数，来控制进度（0.5）
-    
-    CMTime changeTime = CMTimeMakeWithSeconds(currentTime,1.0);
-    
-    
-    [self updateVideoSlider:currentTime];
-    
-    NSLog(@"%.2f", self.mp4Slider.value);
-    
-    
-    [_item seekToTime:changeTime completionHandler:^(BOOL finished) {
-    
+    if (currentTime > 0) {
         
-    }];
-
+        CMTime changeTime = CMTimeMakeWithSeconds(currentTime,1.0);
+        
+        [self updateVideoSlider:currentTime];
+        
+        NSLog(@"%.2f", self.mp4Slider.value);
+        
+        [_item seekToTime:changeTime completionHandler:^(BOOL finished) {
+            
+        }];
+    }
 }
+/*!
+ @method  慢放滚轮的惯性代理方法。
+ @abstract 慢放滚轮的惯性代理方法。
+ @param value 每次滚动的值
+
+ */
+- (void)onDCRotatingWheelDelegateInertanceEventWithValue:(float)value
+{
+    float currentTime = self.mp4Slider.value+(value*0.1 );// 滚轮的拨动距离乘以系数，来控制进度（0.5）
+    
+    if (currentTime > 0) {
+        
+        CMTime changeTime = CMTimeMakeWithSeconds(currentTime,1.0);
+        
+        
+        [self updateVideoSlider:currentTime];
+        
+        NSLog(@"%.2f", self.mp4Slider.value);
+        
+        
+        [_item seekToTime:changeTime completionHandler:^(BOOL finished) {
+            
+            
+        }];
+
+    }
+    
+}
+
 
 /*!
  @method  设置播放按钮图标。

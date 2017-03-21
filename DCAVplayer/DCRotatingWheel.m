@@ -16,10 +16,11 @@
     double _intervalTwoLine;           // 两条线之间的弧度（15/π）
     CGPoint _lastTouchPoint;           // 上次触碰点（每次触摸、滑动都要记录）
     CGFloat _scroledRange;             // 滚动的距离（默认为0）
+    CGFloat _temLength;                // 滚动差
 }
 
 @property (nonatomic,copy) NSMutableArray *linesArray; // 线条layer开始点的集合
-
+@property (nonatomic,copy) NSTimer *timer;
 @end
 
 @implementation DCRotatingWheel
@@ -166,15 +167,15 @@
 
     CGPoint pt = [touch locationInView:self];
     
-    CGFloat temLength = pt.x - _lastTouchPoint.x;
+    _temLength = pt.x - _lastTouchPoint.x;
     
-    float radiuDelta = temLength/_kRadius;
+    float radiuDelta = _temLength/_kRadius;
     
-    self.value = temLength;
+    self.value = _temLength;
     
-    _scroledRange += temLength;
+    _scroledRange += _temLength;
     
-    NSLog(@"aaa==%f",temLength);
+    NSLog(@"aaa==%f",_temLength);
     
     _lastTouchPoint = pt;
     
@@ -209,10 +210,63 @@
  */
 - (void)endTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
 {
+    
+    self.value = _temLength;
     [self.layer setNeedsDisplay];
     // 设置触发事件
     [self sendActionsForControlEvents:UIControlEventValueChanged];
 
+    if (_temLength > 0 && _temLength < 10 ) {
+        
+        return;
+    }
+    if (_temLength < 0  && _temLength >-10) {
+        
+        return;
+    }
+    
+    _timer = [NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(onTimerEvent) userInfo:nil repeats:YES];
+    
+    [[NSRunLoop mainRunLoop]addTimer:_timer forMode:NSDefaultRunLoopMode];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        
+        [_timer invalidate];
+        _timer = nil;
+    });
+}
+
+
+- (void)onTimerEvent
+{
+    // 向左惯性滑动
+    if (_temLength < 0) {
+        
+        _temLength -= 0.5;
+        
+    }// 向右惯性滑动
+    else if (_temLength > 0)
+    {
+        _temLength += 0.5;
+        
+    }
+    _scroledRange += _temLength;
+    
+    if (_scroledRange < 0) {
+        
+        _scroledRange =self.frame.size.width/2 + _scroledRange;
+    }
+    if (_scroledRange > self.frame.size.width/2) {
+        
+        _scroledRange =_scroledRange - self.frame.size.width/2;
+    }
+    
+    [self resetLinesArray];
+    [self.layer setNeedsDisplay];
+    
+    // 设置代理方法，将每一时刻的值传出去
+    [_delegate onDCRotatingWheelDelegateInertanceEventWithValue:_temLength];
+    
 }
 
 @end
