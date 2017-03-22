@@ -285,6 +285,7 @@
         }];
     }
 }
+#pragma mark --- 慢放滚轮的两个代理方法
 /*!
  @method  慢放滚轮的惯性代理方法。
  @abstract 慢放滚轮的惯性代理方法。
@@ -293,6 +294,13 @@
  */
 - (void)onDCRotatingWheelDelegateInertanceEventWithValue:(float)value
 {
+    
+    [self.player pause];
+    
+    _play = NO;
+    
+    [self setPlayBtnImage];
+    
     float currentTime = self.mp4Slider.value+(value*0.1 );// 滚轮的拨动距离乘以系数，来控制进度（0.5）
     
     if (currentTime > 0) {
@@ -313,7 +321,18 @@
     }
     
 }
+/*!
+ @method  惯性滑动已经停止。
+ @abstract 惯性滑动已经停止，设置视频播放。
+ 
+ */
+- (void)onDCRotatingWheelDelegateInertanceDidStop
+{
+    [self.player play];
+    _play = YES;
+    [self setPlayBtnImage];
 
+}
 
 /*!
  @method  设置播放按钮图标。

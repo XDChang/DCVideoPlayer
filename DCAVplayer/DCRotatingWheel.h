@@ -26,7 +26,9 @@
 @end
 
 @protocol DCRotatingWheelDelegate <NSObject>
-
+// 惯性滑动
 - (void)onDCRotatingWheelDelegateInertanceEventWithValue:(float)value;
 
+// 惯性滑动已经停止
+- (void)onDCRotatingWheelDelegateInertanceDidStop;
 @end

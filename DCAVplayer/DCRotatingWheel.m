@@ -233,6 +233,7 @@
         
         [_timer invalidate];
         _timer = nil;
+        [_delegate onDCRotatingWheelDelegateInertanceDidStop];// 惯性滑动已经停止
     });
 }
 
